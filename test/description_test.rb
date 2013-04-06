@@ -7,7 +7,7 @@ module Apipie
       def test_define
         description = Description.define do
           param :name,    String
-          param :age,     Integer
+          param :age,     Integer, 'in years'
           param :address, Hash do
             param :street, String
             param :zip,    String

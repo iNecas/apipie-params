@@ -58,10 +58,6 @@ module Apipie
           self.description
         end
 
-        def merge_with(other_descriptor)
-          raise NotImplementedError, "Dont know how to merge #{self.inspect} with #{other_descriptor.inspect}"
-        end
-
       end
 
       # validate arguments type
@@ -166,17 +162,9 @@ module Apipie
         class DSL
           include Params::DSL
 
-          def initialize(param_group, &block)
-            @param_group = param_group
+          def initialize(&block)
             instance_eval(&block)
           end
-
-          # where the group definition should be looked up when no scope
-          # given. This is expected to return a controller.
-          def _apipie_params_default_group_scope
-            @param_group && @param_group[:scope]
-          end
-
         end
 
         def self.build(param_description, argument, options, block)
@@ -187,7 +175,7 @@ module Apipie
 
         def initialize(param_description, block, options)
           super(param_description, options)
-          @dsl_data = DSL.new(options[:param_group], &block)._apipie_params_dsl_data
+          @dsl_data = DSL.new(&block)._apipie_params_dsl_data
           # specifying action_aware on Hash influences the child params,
           # not the hash param itself: assuming it's required when
           # updating as well
@@ -228,16 +216,6 @@ module Apipie
 
         def description
           "Must be a Hash"
-        end
-
-
-        def merge_with(other_descriptor)
-          if other_descriptor.is_a? self.class
-            @params = Description.unify(self.params + other_descriptor.params)
-            prepare_hash_params
-          else
-            super
-          end
         end
 
       end

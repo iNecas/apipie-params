@@ -132,13 +132,6 @@ module Apipie
         describe_validator('true', 'no', /Must be 'true' or 'false'/)
       end
 
-      # TODO: define
-      describe 'merge_with' do
-        it 'is defined' do
-          skip
-        end
-      end
-
     end
   end
 end
