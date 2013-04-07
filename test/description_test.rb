@@ -5,7 +5,7 @@ module Apipie
     class DescriptionTest < Test::Unit::TestCase
 
       def test_define
-        description = Description.define do
+        person_description = Description.define do
           param :name,    String
           param :age,     Integer, 'in years'
           param :address, Hash do
@@ -14,8 +14,20 @@ module Apipie
           end
         end
 
-        assert_equal [:name, :age, :address], description.params.map(&:name)
-        assert_equal [:street, :zip], description.param(:address).params.map(&:name)
+        assert_equal [:name, :age, :address], person_description.params.map(&:name)
+        assert_equal [:street, :zip], person_description.param(:address).params.map(&:name)
+
+        classroom_description = Description.define do
+          param :name, String
+          param :teacher, person_description
+          param :students, array_of(person_description)
+        end
+
+        teacher_description = classroom_description.param(:teacher)
+        assert_equal [:name, :age, :address], teacher_description.params.map(&:name)
+        students_description = classroom_description.param(:students)
+        assert_instance_of Descriptor::Array, students_description.descriptor
+        assert_equal [:name, :age, :address], students_description.params.map(&:name)
       end
 
       def test_params

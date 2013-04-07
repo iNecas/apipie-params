@@ -23,6 +23,16 @@ module Apipie
                                     options,
                                     block]
       end
+
+      # +descriptor+ might be instance of Descriptor::Base or
+      # something that has it in :descriptor method
+      def array_of(descriptor)
+        descriptor = if descriptor.is_a? Descriptor::Base
+                     elsif descriptor.respond_to?(:descriptor)
+                       descriptor.descriptor
+                     end
+        Descriptor::Array.new(descriptor, {})
+      end
     end
 
   end

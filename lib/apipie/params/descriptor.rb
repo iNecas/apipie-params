@@ -21,10 +21,22 @@ module Apipie
 
         # find the right descriptor for given options
         def self.find(argument, options, block)
+          if argument.is_a? Descriptor::Base
+            return argument
+          end
+
+          # in case param description (or something else quacking the
+          # same) is passed
+          if argument.respond_to?(:descriptor) &&
+                argument.descriptor.is_a?(Descriptor::Base)
+            return argument.descriptor
+          end
+
           @descriptor_classes.each do |descriptor_class|
             descriptor = descriptor_class.build(argument, options, block)
             return descriptor if descriptor
           end
+
           return nil
         end
 
@@ -210,7 +222,7 @@ module Apipie
 
         extend Forwardable
 
-        def_delegators :@hash_descriptor, :invalid_param_error, :param, :params
+        def_delegators :@descriptor, :invalid_param_error
 
         def self.build(argument, options, block)
           if argument == ::Array && block.is_a?(::Proc)
@@ -218,9 +230,16 @@ module Apipie
           end
         end
 
-        def initialize(block, options)
+        def initialize(descriptor_or_block, options)
           super(options)
-          @hash_descriptor = Hash.new(block, options)
+          case descriptor_or_block
+          when ::Proc
+            @descriptor = Hash.new(descriptor_or_block, options)
+          when Descriptor::Base
+            @descriptor = descriptor_or_block
+          else
+            raise ArgumentError, "Proc or Descriptor::Base expected, got #{descriptor_or_block.class.name}"
+          end
         end
 
         def description
@@ -230,8 +249,26 @@ module Apipie
         def json_schema
           super.merge(
             'type' => 'array',
-            'items' => @hash_descriptor.json_schema
+            'items' => @descriptor.json_schema
           )
+        end
+
+        # delegate to params and param only if @descriptor supports those
+        def respond_to?(method)
+          case method.to_s
+          when 'params', 'param'
+            @descriptor.respond_to?(method)
+          else
+            super
+          end
+        end
+
+        def method_missing(method, *args, &block)
+          if respond_to?(method)
+            @descriptor.send(method, *args, &block)
+          else
+            super
+          end
         end
 
       end
