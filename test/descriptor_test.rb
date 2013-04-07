@@ -45,12 +45,13 @@ module Apipie
 
       describe 'custom descriptor' do
         subject { Description.new('test', :custom, {}) }
-        describe_validator('valid', 'invalid', /value has to be "value"/)
+        #describe_validator('valid', 'invalid', /value has to be "value"/)
+        it 'allows to extend the default json schema'
       end
 
-      describe 'type descriptor' do
+      describe 'string descriptor' do
         subject { Description.new('test', String, {}) }
-        describe_validator('valid', :invalid, /Must be String/)
+        describe_validator('valid', :invalid, /Must be a string/)
       end
 
       describe 'regexp descriptor' do
@@ -61,11 +62,6 @@ module Apipie
       describe 'enum descriptor' do
         subject { Description.new('test', ['valid', 'valider'], {}) }
         describe_validator('valid', 'invalid', /Must be one of/)
-      end
-
-      describe 'proc descriptor' do
-        subject { Description.new('test', lambda { |x| x == 'valid' ? true : 'Has to be valid' }, {}) }
-        describe_validator('valid', 'invalid', /Has to be valid/)
       end
 
       describe 'hash descriptor' do
@@ -79,7 +75,7 @@ module Apipie
           end
         end
         # TODO: test require and allow_nil
-        describe_validator({:name => "valid"}, {:name => :invalid}, /Must be String/)
+        describe_validator({:name => "valid"}, {:name => 123}, /Must be a string/)
 
         describe '#params' do
           it 'returns param descriptions of all keys' do
@@ -94,7 +90,7 @@ module Apipie
           it 'returns param description for a key' do
             street_description = subject.param(:address).param(:street)
             street_description.name.must_equal :street
-            street_description.descriptor.must_be_kind_of Descriptor::Type
+            street_description.descriptor.must_be_kind_of Descriptor::String
           end
         end
       end
@@ -106,7 +102,7 @@ module Apipie
           end
         end
 
-        describe_validator([{:name => "valid"}], [{:name => :invalid}], /Must be String/)
+        describe_validator([{:name => "valid"}], [{:name => :invalid}], /Must be a string/)
       end
 
       describe 'undef descriptor' do

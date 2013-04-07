@@ -24,7 +24,7 @@ module Apipie
           Descriptor::Hash.new(description,
                                Proc.new { param(:test, String) },
                                {})
-        descriptor_without_params = Descriptor::Type.new(description, String, {})
+        descriptor_without_params = Descriptor::String.new(description, {})
 
         description.descriptor = descriptor_with_params
         assert description.respond_to?(:params)
