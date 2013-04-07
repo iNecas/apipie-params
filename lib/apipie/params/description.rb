@@ -8,8 +8,7 @@ module Apipie
 
       def self.define(&block)
         param_description = Description.new(nil, nil, {})
-        param_description.descriptor =
-          Descriptor::Hash.new(param_description, block, {})
+        param_description.descriptor = Descriptor::Hash.new(block, {})
         return param_description
       end
 
@@ -23,8 +22,7 @@ module Apipie
         @allow_nil = @options.has_key?(:allow_nil) ? !!@options[:allow_nil] : nil
 
         unless descriptor_arg.nil?
-          @descriptor = Params::Descriptor::Base.find(self,
-                                                      descriptor_arg,
+          @descriptor = Params::Descriptor::Base.find(descriptor_arg,
                                                       options,
                                                       block)
         else
@@ -33,9 +31,13 @@ module Apipie
 
       end
 
+      def validate!(value)
+        descriptor.validate!(self, value)
+      end
+
       def respond_to?(method)
         case method.to_s
-        when 'params', 'param', 'validate!'
+        when 'params', 'param'
           @descriptor.respond_to?(method)
         else
           super

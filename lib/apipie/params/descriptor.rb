@@ -5,10 +5,7 @@ module Apipie
     module Descriptor
 
       class Base
-        attr_accessor :param_description
-
-        def initialize(param_description, options)
-          @param_description = param_description
+        def initialize(options)
           if options.is_a? ::Hash
             @options = options
           else
@@ -22,21 +19,12 @@ module Apipie
         end
 
         # find the right descriptor for given options
-        def self.find(param_description, argument, options, block)
+        def self.find(argument, options, block)
           @descriptor_classes.each do |descriptor_class|
-            descriptor = descriptor_class.build(param_description,
-                                                argument,
-                                                options,
-                                                block)
+            descriptor = descriptor_class.build(argument, options, block)
             return descriptor if descriptor
           end
           return nil
-        end
-
-        # return true of false if the value is valid or not. Used by
-        # default by the +validate!+ method
-        def valid?(value)
-          raise NotImplementedError, 'abstract method'
         end
 
         # to be used in the error description and json representation
@@ -44,8 +32,8 @@ module Apipie
           ""
         end
 
-        def invalid_param_error(error_value, errors = [])
-          Params::Errors::Invalid.new(@param_description, error_value, description)
+        def invalid_param_error(param_description, error_value, errors = [])
+          Params::Errors::Invalid.new(param_description, error_value, description)
         end
 
         def to_json
@@ -69,7 +57,7 @@ module Apipie
         end
 
 
-        def validate!(value)
+        def validate!(param_description, value)
           encapsulated_value = {'root' => value}
           encapsulated_schema = {
             'type' => 'object',
@@ -80,7 +68,7 @@ module Apipie
                                                   :errors_as_objects => true)
 
           if errors.any?
-            raise invalid_param_error(value, errors)
+            raise invalid_param_error(param_description, value, errors)
           else
             return true
           end
@@ -91,9 +79,9 @@ module Apipie
       # validate arguments type
       class String < JsonSchema
 
-        def self.build(param_description, type, options, block)
+        def self.build(type, options, block)
           if type == ::String
-            self.new(param_description, options)
+            self.new(options)
           end
         end
 
@@ -110,12 +98,12 @@ module Apipie
       # validate arguments value with regular expression
       class Regexp < JsonSchema
 
-        def self.build(param_description, regexp, options, block)
-          self.new(param_description, regexp, options) if regexp.is_a? ::Regexp
+        def self.build(regexp, options, block)
+          self.new(regexp, options) if regexp.is_a? ::Regexp
         end
 
-        def initialize(param_description, regexp, options)
-          super(param_description, options)
+        def initialize(regexp, options)
+          super(options)
           @regexp = regexp
         end
 
@@ -132,14 +120,14 @@ module Apipie
       # arguments value must be one of given in array
       class Enum < JsonSchema
 
-        def self.build(param_description, enum, options, block)
+        def self.build(enum, options, block)
           if enum.is_a?(::Array) && block.nil?
-            self.new(param_description, enum, options)
+            self.new(enum, options)
           end
         end
 
-        def initialize(param_description, enum, options)
-          super(param_description, options)
+        def initialize(enum, options)
+          super(options)
           @enum = enum
         end
 
@@ -163,20 +151,19 @@ module Apipie
           end
         end
 
-        def self.build(param_description, argument, options, block)
+        def self.build(argument, options, block)
           if block.is_a?(::Proc) && block.arity <= 0 && argument == ::Hash
-            self.new(param_description, block, options)
+            self.new(block, options)
           end
         end
 
-        def initialize(param_description, block, options)
-          super(param_description, options)
+        def initialize(block, options)
+          super(options)
           @dsl_data = DSL.new(&block)._apipie_params_dsl_data
         end
 
         def params
           @params ||= @dsl_data.map do |name, arg, options, block|
-            options[:parent] = self.param_description
             Description.new(name, arg, options, &block)
           end
           return @params
@@ -198,18 +185,21 @@ module Apipie
                       'properties' => properties)
         end
 
-        def invalid_param_error(error_value, errors)
+        def invalid_param_error(param_description, error_value, errors)
           descriptions = errors.map do |error|
-            fragment_descriptor(error[:fragment]).description
-          end.join(', ')
-          Params::Errors::Invalid.new(@param_description, error_value, descriptions)
+            fragment_descriptor(param_description, error[:fragment])
+          end
+          # TODO: handle multiple errors at the same time
+          invalid_param = descriptions.first
+          description = invalid_param.descriptor.description
+          Params::Errors::Invalid.new(invalid_param, error_value, description)
         end
 
-        def fragment_descriptor(fragment)
+        def fragment_descriptor(param_description, fragment)
           keys_path = fragment.sub(/\A#\/root\//,'').split('/')
           keys_path.delete_if { |a| a =~ /\A\d+\Z/ }
-          keys_path.reduce(self) do |descriptor, key|
-            descriptor.param(key).descriptor
+          keys_path.reduce(param_description) do |description, key|
+            description.param(key)
           end
         end
 
@@ -217,9 +207,9 @@ module Apipie
 
       class Array < Hash
 
-        def self.build(param_description, argument, options, block)
+        def self.build(argument, options, block)
           if argument == ::Array && block.is_a?(::Proc)
-            self.new(param_description, block, options)
+            self.new(block, options)
           end
         end
 
@@ -239,9 +229,9 @@ module Apipie
       # special type of descriptor: we say that it's not specified
       class Undef < JsonSchema
 
-        def self.build(param_description, argument, options, block)
+        def self.build(argument, options, block)
           if argument == :undef
-            self.new(param_description, options)
+            self.new(options)
           end
         end
 
@@ -252,9 +242,9 @@ module Apipie
 
       class Number < Regexp
 
-        def self.build(param_description, argument, options, block)
+        def self.build(argument, options, block)
           if argument == :number
-            self.new(param_description, self.pattern, options)
+            self.new(self.pattern, options)
           end
         end
 
@@ -270,9 +260,9 @@ module Apipie
 
       class Boolean < Enum
 
-        def self.build(param_description, argument, options, block)
+        def self.build(argument, options, block)
           if argument == :bool
-            self.new(param_description, valid_values, options)
+            self.new(valid_values, options)
           end
         end
 

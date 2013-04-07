@@ -4,24 +4,6 @@ module Apipie
   module Params
     describe Descriptor do
 
-      class CustomDescriptor < Descriptor::Base
-
-        def self.build(param_description, argument, options, block)
-          if argument == :custom
-            self.new(param_description, options)
-          end
-        end
-
-        def valid?(value)
-          value == 'valid'
-        end
-
-        def description
-          'value has to be "value"'
-        end
-
-      end
-
       def self.describe_validator(valid_value, invalid_value, exception_matcher)
         describe 'valid value' do
           let(:value) { valid_value }
