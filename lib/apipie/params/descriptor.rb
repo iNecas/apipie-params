@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/indifferent_access'
+require 'forwardable'
 
 module Apipie
   module Params
@@ -205,7 +206,11 @@ module Apipie
 
       end
 
-      class Array < Hash
+      class Array < JsonSchema
+
+        extend Forwardable
+
+        def_delegators :@hash_descriptor, :invalid_param_error, :param, :params
 
         def self.build(argument, options, block)
           if argument == ::Array && block.is_a?(::Proc)
@@ -213,15 +218,20 @@ module Apipie
           end
         end
 
+        def initialize(block, options)
+          super(options)
+          @hash_descriptor = Hash.new(block, options)
+        end
+
         def description
           "Must be an Array"
         end
 
         def json_schema
-          {
+          super.merge(
             'type' => 'array',
-            'items' => super
-          }
+            'items' => @hash_descriptor.json_schema
+          )
         end
 
       end
