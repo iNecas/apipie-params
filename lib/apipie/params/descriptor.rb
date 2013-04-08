@@ -93,9 +93,7 @@ module Apipie
       class String < JsonSchema
 
         def self.build(type, options, block)
-          if type == ::String
-            self.new(options)
-          end
+          self.new(options) if type == ::String
         end
 
         def description
@@ -104,6 +102,23 @@ module Apipie
 
         def json_schema
           super.merge('type' => 'string')
+        end
+
+      end
+
+      # validate arguments type
+      class Integer < JsonSchema
+
+        def self.build(type, options, block)
+          self.new(options) if type == ::Integer
+        end
+
+        def description
+          "Must be an integer"
+        end
+
+        def json_schema
+          super.merge('type' => 'integer')
         end
 
       end

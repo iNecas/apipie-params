@@ -36,6 +36,11 @@ module Apipie
         describe_validator('valid', :invalid, /Must be a string/)
       end
 
+      describe 'integer descriptor' do
+        subject { Description.new('test', Integer, {}) }
+        describe_validator(123, '123', /Must be an integer/)
+      end
+
       describe 'regexp descriptor' do
         subject { Description.new('test', /\Avalid/, {}) }
         describe_validator('valid', 'invalid', /Must match/)
