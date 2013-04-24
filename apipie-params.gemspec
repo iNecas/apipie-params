@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/iNecas/apipie-params"
   s.summary     = "DSL for describing data structures"
   s.description = "Allows defining structure of data and " +
-                  "perform validation against it"
+                  "perform validation against it using json-schema"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
