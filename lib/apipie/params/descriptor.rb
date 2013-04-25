@@ -76,6 +76,7 @@ module Apipie
             'type' => 'object',
             'properties' => {'root' => json_schema}
           }
+          require 'json-schema'
           errors = JSON::Validator.fully_validate(encapsulated_schema,
                                                   encapsulated_value.with_indifferent_access,
                                                   :errors_as_objects => true)

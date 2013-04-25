@@ -1,4 +1,3 @@
-require 'json-schema'
 require 'apipie/params.rb'
 require 'apipie/params/errors.rb'
 require 'apipie/params/dsl.rb'
