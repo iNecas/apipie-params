@@ -14,7 +14,7 @@ module Apipie
       # Example:
       #   param :greeting, String, :desc => "arbitrary text", :required => true
       #
-      def param(param_name, descriptor_arg, desc_or_options = nil, options = {}, &block) #:doc:
+      def param(param_name, descriptor_arg = nil, desc_or_options = nil, options = {}, &block) #:doc:
         if desc_or_options.is_a? String
           options = options.merge(:desc => desc_or_options)
         end
