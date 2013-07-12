@@ -28,8 +28,12 @@ module Apipie
       # something that has it in :descriptor method
       def array_of(descriptor)
         descriptor = if descriptor.is_a? Descriptor::Base
+                       descriptor
                      elsif descriptor.respond_to?(:descriptor)
                        descriptor.descriptor
+                     else
+                       raise ArgumentError,
+                             "descriptor is not a Descriptor::Base or an Object with #descriptor method"
                      end
         Descriptor::Array.new(descriptor, {})
       end
