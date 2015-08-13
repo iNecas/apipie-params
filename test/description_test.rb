@@ -2,7 +2,7 @@ require 'test_helper'
 
 module Apipie
   module Params
-    class DescriptionTest < Test::Unit::TestCase
+    class DescriptionTest < MiniTest::Unit
 
       def test_define
         person_description = Params.define do
