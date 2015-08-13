@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.require_paths = ["lib"]
 
-  s.add_dependency "activesupport"
   s.add_dependency "rake"
   s.add_development_dependency "json-schema"
   s.add_development_dependency "minitest"

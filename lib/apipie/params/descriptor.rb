@@ -1,4 +1,3 @@
-require 'active_support/core_ext/hash/indifferent_access'
 require 'forwardable'
 
 module Apipie
@@ -78,7 +77,7 @@ module Apipie
           }
           require 'json-schema'
           errors = JSON::Validator.fully_validate(encapsulated_schema,
-                                                  encapsulated_value.with_indifferent_access,
+                                                  encapsulated_value,
                                                   :errors_as_objects => true)
 
           if errors.any?
